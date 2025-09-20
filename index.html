@@ -1,12 +1,212 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="./src/css/output.css">
-    <title>Snake Game</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Snake Game</title>
+  <link rel="stylesheet" href="src/css/output.css">
+  <!-- font -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+  <style>
+    * {
+      font-family: "Press Start 2P", system-ui;
+    }
+  </style>
 </head>
 <body>
-    <h1 class="text-4xl text-red-900">Ashish</h1>
+  <!-- Name Input Screen -->
+  <div id="NameCheck" class="h-screen flex justify-center items-center bg-gray-500">
+    <div class="p-10 rounded-md shadow-lg text-center bg-gray-200">
+      <h1 class="text-sm font-semibold">Enter Your Name</h1>
+      <form action="#" class="flex flex-col items-center">
+        <input type="text" class="border-2 border-gray-300 p-2 m-4" placeholder="Enter your name" required>
+        <button type="submit" class="bg-black hover:bg-black/90 text-white px-8 py-2 rounded-full">Submit</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Game Screen -->
+  <section id="playGame" class="hidden h-screen bg-gray-900">
+    <div class="container mx-auto py-10 px-10 text-white">
+      <h1 class="text-3xl mb-4 text-center mb-10">🐍 Snake Game</h1>
+      <div class="space-y-2">
+        <h1>Player: <span id="playerName">Guest</span></h1>
+        <h1><span>Score:</span> <span id="score">0</span></h1>
+        <h1><span>Highest Score:</span> <span id="highScore">0</span></h1>
+      </div>
+    </div>
+    <div class="flex items-center justify-center">
+      <div class="text-center">
+        <canvas id="gameBoard" width="800" height="600" class="bg-black border-4 border-green-500 rounded"></canvas>
+      </div>
+    </div>
+  </section>    
+
+  <!-- Game Sounds -->
+  <audio id="eatSound" src="https://actions.google.com/sounds/v1/cartoon/pop.ogg"></audio>
+  <audio id="turnSound" src="https://actions.google.com/sounds/v1/cartoon/wood_plank_flicks.ogg"></audio>
+  <audio id="gameOverSound" src="https://actions.google.com/sounds/v1/cartoon/clang_and_wobble.ogg"></audio>
+
+  <script>
+    const canvas = document.getElementById("gameBoard");
+    const ctx = canvas.getContext("2d");
+    const box = 20;
+    let snake, direction, food, score, game;
+
+    // Sounds
+    const eatSound = document.getElementById("eatSound");
+    const turnSound = document.getElementById("turnSound");
+    const gameOverSound = document.getElementById("gameOverSound");
+
+    // Screens & Elements
+    const nameForm = document.querySelector("#NameCheck form");
+    const nameScreen = document.getElementById("NameCheck");
+    const playScreen = document.getElementById("playGame");
+    const playerNameEl = document.getElementById("playerName");
+    const scoreEl = document.getElementById("score");
+    const highScoreEl = document.getElementById("highScore");
+
+    // Load saved data
+    window.addEventListener("load", function() {
+      const savedName = localStorage.getItem("playerName");
+      const savedHighScore = localStorage.getItem("highScore") || 0;
+
+      highScoreEl.innerText = savedHighScore;
+
+      if (savedName) {
+        nameScreen.classList.add("hidden");
+        playScreen.classList.remove("hidden");
+        playerNameEl.innerText = savedName;
+        startGame();
+      }
+    });
+
+    // Handle name form
+    nameForm.addEventListener("submit", function(e) {
+      e.preventDefault();
+
+      const playerName = nameForm.querySelector("input").value.trim();
+      if (playerName === "") {
+        alert("Please enter your name!");
+        return;
+      }
+      localStorage.setItem("playerName", playerName);
+
+      nameScreen.classList.add("hidden");
+      playScreen.classList.remove("hidden");
+      playerNameEl.innerText = playerName;
+
+      startGame();
+    });
+
+    function startGame() {
+      snake = [{x: 9 * box, y: 10 * box}];
+      direction = null;
+      score = 0;
+      scoreEl.innerText = score;
+
+      food = {
+        x: Math.floor(Math.random() * (canvas.width / box)) * box,
+        y: Math.floor(Math.random() * (canvas.height / box)) * box
+      };
+
+      document.addEventListener("keydown", changeDirection);
+
+      if (game) clearInterval(game);
+      game = setInterval(draw, 100);
+    }
+
+    function changeDirection(event) {
+      if(event.key === "ArrowLeft" && direction !== "RIGHT"){
+        direction = "LEFT"; 
+        turnSound.play();
+      }
+      else if(event.key === "ArrowUp" && direction !== "DOWN") {
+        direction = "UP"; 
+        turnSound.play();
+      }
+      else if(event.key === "ArrowRight" && direction !== "LEFT") {
+        direction = "RIGHT"; 
+        turnSound.play();
+      }
+      else if(event.key === "ArrowDown" && direction !== "UP") {
+        direction = "DOWN"; 
+        turnSound.play();
+      }
+    }
+
+    function collision(newHead, snake) {
+      for(let i=0; i<snake.length; i++){
+        if(newHead.x === snake[i].x && newHead.y === snake[i].y){
+          return true;
+        }
+      }
+      return false;
+    }
+
+    function draw(){
+      ctx.fillStyle = "black";
+      ctx.fillRect(0,0,canvas.width,canvas.height);
+
+      for(let i=0; i<snake.length; i++){
+        ctx.fillStyle = (i === 0) ? "lime" : "green";
+        ctx.fillRect(snake[i].x, snake[i].y, box, box);
+
+        ctx.strokeStyle = "black";
+        ctx.strokeRect(snake[i].x, snake[i].y, box, box);
+      }
+
+      ctx.fillStyle = "red";
+      ctx.fillRect(food.x, food.y, box, box);
+
+      let snakeX = snake[0].x;
+      let snakeY = snake[0].y;
+
+      if(direction === "LEFT") snakeX -= box;
+      if(direction === "UP") snakeY -= box;
+      if(direction === "RIGHT") snakeX += box;
+      if(direction === "DOWN") snakeY += box;
+
+      // Eat food
+      if(snakeX === food.x && snakeY === food.y){
+        score++;
+        scoreEl.innerText = score;
+
+        eatSound.play();
+
+        food = {
+          x: Math.floor(Math.random() * (canvas.width / box)) * box,
+          y: Math.floor(Math.random() * (canvas.height / box)) * box
+        };
+      } else {
+        snake.pop();
+      }
+
+      let newHead = {x: snakeX, y: snakeY};
+
+      // Game Over
+      if(snakeX < 0 || snakeY < 0 || snakeX >= canvas.width || snakeY >= canvas.height || collision(newHead, snake)){
+        clearInterval(game);
+        gameOverSound.play();
+
+        // Update high score
+        let highScore = localStorage.getItem("highScore") || 0;
+        if(score > highScore){
+          localStorage.setItem("highScore", score);
+          highScoreEl.innerText = score;
+        }
+
+        alert("Game Over! Final Score: " + score);
+
+        // Restart after 1 second
+        setTimeout(startGame, 300);
+        return;
+      }
+
+      snake.unshift(newHead);
+    }
+  </script>
 </body>
 </html>
