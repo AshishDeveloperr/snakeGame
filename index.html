@@ -13,10 +13,17 @@
     * {
       font-family: "Press Start 2P", system-ui;
     }
+    #gameBoard{
+      background: rgba(153, 182, 249, 0.267);
+          border-radius: 16px;
+          box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+          backdrop-filter: blur(18.2px);
+          -webkit-backdrop-filter: blur(9.2px);
+          border: 1px solid rgba(255, 255, 255, 0.26);
+    }
   </style>
 </head>
 <body>
-  <!-- Name Input Screen -->
   <div id="NameCheck" class="h-screen flex justify-center items-center bg-gray-500">
     <div class="p-10 rounded-md shadow-lg text-center bg-gray-200">
       <h1 class="text-sm font-semibold">Enter Your Name</h1>
@@ -27,19 +34,20 @@
     </div>
   </div>
 
-  <!-- Game Screen -->
-  <section id="playGame" class="hidden h-screen bg-gray-900">
+  <section id="playGame" class="hidden h-screen bg-cover bg-center bg-no-repeat" style="background-image: url('src/media/bg.png');">
     <div class="container mx-auto py-10 px-10 text-white">
-      <h1 class="text-3xl mb-4 text-center mb-10">🐍 Snake Game</h1>
-      <div class="space-y-2">
-        <h1>Player: <span id="playerName">Guest</span></h1>
-        <h1><span>Score:</span> <span id="score">0</span></h1>
-        <h1><span>Highest Score:</span> <span id="highScore">0</span></h1>
+      <h1 class="text-5xl font-bold mb-4 text-center text-yellow-500">Snake Game</h1>
+      <div class="flex justify-end">
+        <div class="space-y-2">
+          <h1>Player: <span id="playerName">Guest</span></h1>
+          <h1><span>Score:</span> <span id="score">0</span></h1>
+          <h1><span>Highest Score:</span> <span id="highScore">0</span></h1>
+        </div>
       </div>
     </div>
     <div class="flex items-center justify-center">
       <div class="text-center">
-        <canvas id="gameBoard" width="800" height="600" class="bg-black border-4 border-green-500 rounded"></canvas>
+        <canvas id="gameBoard" width="800" height="600" class="shadow-2xl drop-shadow-2xl shadow-blue-300"></canvas>
       </div>
     </div>
   </section>    
@@ -147,8 +155,7 @@
     }
 
     function draw(){
-      ctx.fillStyle = "black";
-      ctx.fillRect(0,0,canvas.width,canvas.height);
+      ctx.clearRect(0,0,canvas.width,canvas.height);
 
       for(let i=0; i<snake.length; i++){
         ctx.fillStyle = (i === 0) ? "lime" : "green";
@@ -200,7 +207,6 @@
 
         alert("Game Over! Final Score: " + score);
 
-        // Restart after 1 second
         setTimeout(startGame, 300);
         return;
       }
